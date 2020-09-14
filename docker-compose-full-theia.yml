@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  ide:
+    build: 
+      context: theia-fullcustom-docker
+      args:
+          - http_proxy=${http_proxy}
+          - https_proxy=${https_proxy}
+          - no_proxy=${no_proxy}
+          - USERID=1000
+          - GROUPID=1000
+    container_name: thiea_ide_full_custom
+    restart: unless-stopped
+    environment:
+      - USERNAME=theia
+      - GROUPNAME=theia
+    volumes:
+      # - ./volumes/ide:/home/theia
+      - /etc/localtime:/etc/localtime:ro
+  web:
+    build:
+      context: web
+      args:
+          - http_proxy=${http_proxy}
+          - https_proxy=${https_proxy}
+          - no_proxy=${no_proxy}
+          # Change Theia Web Login user/password
+          # - BASIC_AUTH_USERNAME=theia
+          # - BASIC_AUTH_PASSWORD=theia_password
+    ports:
+      - "80:80"
+      - "443:443"
+    read_only: true
+    restart: unless-stopped
+    volumes:
+      # This directory must have cert files if you want to enable SSL
+      # - ./volumes/web/cert:/cert:ro
+      - /etc/localtime:/etc/localtime:ro
