@@ -15,9 +15,9 @@ services:
     environment:
       - USERNAME=theia
       - GROUPNAME=theia
-    volumes:
-      # - ./volumes/ide:/home/theia
-      - /etc/localtime:/etc/localtime:ro
+    # volumes:
+      # - ./volumes/ide:/home/project
+      # - /etc/localtime:/etc/localtime:ro
   web:
     build:
       context: web
@@ -25,15 +25,15 @@ services:
           - http_proxy=${http_proxy}
           - https_proxy=${https_proxy}
           - no_proxy=${no_proxy}
-          # Change Theia Web Login user/password
-          # - BASIC_AUTH_USERNAME=theia
-          # - BASIC_AUTH_PASSWORD=theia_password
+        # Change Theia Web Login user/password
+        # - BASIC_AUTH_USERNAME=theia
+        # - BASIC_AUTH_PASSWORD=theia_password
     ports:
       - "80:80"
       - "443:443"
     read_only: true
     restart: unless-stopped
-    volumes:
-      # This directory must have cert files if you want to enable SSL
-      # - ./volumes/web/cert:/cert:ro
-      - /etc/localtime:/etc/localtime:ro
+  # volumes:
+    # This directory must have cert files if you want to enable SSL
+    # - ./volumes/web/cert:/cert:ro
+    # - /etc/localtime:/etc/localtime:ro
