@@ -25,13 +25,7 @@ RUN apt-get update && \
                        xz-utils \
                        sudo \
                        vim \
-                       iproute2 \
-                       locales \
-                       language-pack-ja-base \
-                       language-pack-ja && \
-                       locale-gen ja_JP.UTF-8 && \
-                       localedef -f UTF-8 -i ja_JP ja_JP.utf8
-    && \
+                       iproute2 && \
     apt-get clean && \
     apt-get autoremove -y && \
     rm -rf /var/cache/apt/* && \
@@ -139,6 +133,22 @@ yarn --cache-folder ./ycache && rm -rf ./ycache && \
 ;fi
 
 FROM common
+
+WORKDIR /home/theia
+
+COPY --from=theia --chown=theia:theia /home/theia /home/theia
+
+RUN chmod g+rw /home && \
+    mkdir -p /home/project && \
+    mkdir -p /home/theia/.pub-cache/bin && \
+    mkdir -p /usr/local/cargo && \
+    mkdir -p /usr/local/go && \
+    mkdir -p /usr/local/go-packages && \
+    chown -R theia:theia /home/project && \
+    chown -R theia:theia /home/theia/.pub-cache/bin && \
+    chown -R theia:theia /usr/local/cargo && \
+    chown -R theia:theia /usr/local/go && \
+    chown -R theia:theia /usr/local/go-packages
 
 # Theia application
 ## Needed for node-gyp, nsfw build
