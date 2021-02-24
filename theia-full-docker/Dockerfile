@@ -5,6 +5,14 @@ ENV DEBIAN_FRONTEND noninteractive
 ARG NODE_VERSION=12.18.3
 ENV NODE_VERSION $NODE_VERSION
 ENV YARN_VERSION 1.22.5
+ARG USERID=1000
+ARG GROUPID=1000
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ARG HTTP_PROXY=${http_proxy}
+ARG HTTPS_PROXY=${http_proxy}
+ARG NO_PROXY=${no_proxy}
 
 # Common deps
 RUN apt-get update && \
@@ -16,6 +24,13 @@ RUN apt-get update && \
                        wget \
                        xz-utils \
                        sudo \
+                       vim \
+                       iproute2 \
+                       locales \
+                       language-pack-ja-base \
+                       language-pack-ja && \
+                       locale-gen ja_JP.UTF-8 && \
+                       localedef -f UTF-8 -i ja_JP ja_JP.utf8
     && \
     apt-get clean && \
     apt-get autoremove -y && \
@@ -24,7 +39,8 @@ RUN apt-get update && \
     rm -rf /tmp/*
 
 ## User account
-RUN adduser --disabled-password --gecos '' theia && \
+RUN groupadd -g ${GROUPID} theia && \
+    adduser --disabled-password --uid ${USERID} --gid ${GROUPID} --gecos '' theia && \
     adduser theia sudo && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
@@ -182,12 +198,12 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
     echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic main" > /etc/apt/sources.list.d/llvm.list && \
     apt-get update && \
     apt-get install -y \
-                       clang-tools-$LLVM \
-                       clangd-$LLVM \
-                       clang-tidy-$LLVM \
-                       gcc-multilib \
-                       g++-multilib \
-                       gdb && \
+    clang-tools-$LLVM \
+    clangd-$LLVM \
+    clang-tidy-$LLVM \
+    gcc-multilib \
+    g++-multilib \
+    gdb && \
     ln -s /usr/bin/clang-$LLVM /usr/bin/clang && \
     ln -s /usr/bin/clang++-$LLVM /usr/bin/clang++ && \
     ln -s /usr/bin/clang-cl-$LLVM /usr/bin/clang-cl && \
@@ -236,8 +252,8 @@ RUN apt-get update \
     && apt-get install -y curl php$PHP_VERSION php$PHP_VERSION-cli php$PHP_VERSION-mbstring unzip php$PHP_VERSION-common php$PHP_VERSION-json php-yaml php-xdebug \
     && apt-get remove -y software-properties-common
 RUN echo '[XDebug]\n\
-xdebug.remote_enable = 1\n\
-xdebug.remote_autostart = 1' >> /etc/php/$PHP_VERSION/mods-available/xdebug.ini
+    xdebug.remote_enable = 1\n\
+    xdebug.remote_autostart = 1' >> /etc/php/$PHP_VERSION/mods-available/xdebug.ini
 RUN curl -s -o composer-setup.php https://getcomposer.org/installer \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
     && rm composer-setup.php
@@ -255,12 +271,12 @@ RUN apt-get update \
     && curl -SLO https://swift.org/builds/swift-$SWIFT_VERSION-release/ubuntu1804/swift-$SWIFT_VERSION-RELEASE/swift-$SWIFT_VERSION-RELEASE-ubuntu18.04.tar.gz.sig \
     && wget -q -O - https://swift.org/keys/all-keys.asc | gpg --import - \
     && (    gpg --keyserver pool.sks-keyservers.net --refresh-keys Swift \
-         || gpg --keyserver ipv4.pool.sks-keyservers.net --refresh-keys Swift \
-         || gpg --keyserver pool.sks-keyservers.net --refresh-keys Swift \
-         || gpg --keyserver pgp.mit.edu --refresh-keys Swift \
-         || gpg --keyserver keyserver.pgp.com --refresh-keys Swift \
-         || gpg --keyserver ha.pool.sks-keyservers.net --refresh-keys Swift \
-       ) \
+    || gpg --keyserver ipv4.pool.sks-keyservers.net --refresh-keys Swift \
+    || gpg --keyserver pool.sks-keyservers.net --refresh-keys Swift \
+    || gpg --keyserver pgp.mit.edu --refresh-keys Swift \
+    || gpg --keyserver keyserver.pgp.com --refresh-keys Swift \
+    || gpg --keyserver ha.pool.sks-keyservers.net --refresh-keys Swift \
+    ) \
     && gpg --verify swift-$SWIFT_VERSION-RELEASE-ubuntu18.04.tar.gz.sig \
     && tar fxz swift-$SWIFT_VERSION-RELEASE-ubuntu18.04.tar.gz \
     && rm swift-$SWIFT_VERSION-RELEASE-ubuntu18.04.tar.gz swift-$SWIFT_VERSION-RELEASE-ubuntu18.04.tar.gz.sig \
@@ -273,13 +289,13 @@ RUN apt-get update \
 ENV DART_VERSION 2.9.0
 
 RUN \
-  apt-get update && apt-get install --no-install-recommends -y -q gnupg2 curl git ca-certificates apt-transport-https openssh-client && \
-  curl https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-  curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list && \
-  curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_testing.list > /etc/apt/sources.list.d/dart_testing.list && \
-  curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_unstable.list > /etc/apt/sources.list.d/dart_unstable.list && \
-  apt-get update && \
-  apt-get install dart=$DART_VERSION-1
+    apt-get update && apt-get install --no-install-recommends -y -q gnupg2 curl git ca-certificates apt-transport-https openssh-client && \
+    curl https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list && \
+    curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_testing.list > /etc/apt/sources.list.d/dart_testing.list && \
+    curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_unstable.list > /etc/apt/sources.list.d/dart_unstable.list && \
+    apt-get update && \
+    apt-get install dart=$DART_VERSION-1
 
 ENV DART_SDK /usr/lib/dart
 ENV PATH $DART_SDK/bin:/theia/.pub-cache/bin:$PATH
@@ -319,7 +335,7 @@ ENV SHELL=/bin/bash \
     # Configure user Go path
     GOPATH=/home/project
 
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+ENV LC_ALL=ja_JP.UTF-8
+ENV LANG=ja_JP.UTF-8
 
 ENTRYPOINT [ "node", "/home/theia/src-gen/backend/main.js", "/home/project", "--hostname=0.0.0.0" ]

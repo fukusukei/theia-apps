@@ -3,7 +3,7 @@ version: "3"
 services:
   ide:
     build: 
-      context: theia-fullcustom-docker
+      context: theia-full-docker
       args:
           - http_proxy=${http_proxy}
           - https_proxy=${https_proxy}
